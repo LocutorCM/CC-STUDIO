@@ -94,7 +94,6 @@ void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     rp.width = juce::jlimit (0.0f, 1.0f, width * modeWidth[mode] / 1.5f);
     rp.freezeMode = 0.0f;
     reverb.setParameters (rp);
-    reverb.setSampleRate (currentSampleRate);
 
     // The five voicings shape decay, room size and damping independently.
     reverb.processStereo (wet.getWritePointer (0), wet.getWritePointer (1), n);
