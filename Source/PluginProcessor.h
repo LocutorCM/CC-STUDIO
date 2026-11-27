@@ -31,7 +31,7 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:
-    juce::dsp::Reverb reverb;
+    juce::Reverb reverb;
     juce::AudioBuffer<float> predelayBuffer;
     int predelayWrite = 0;
     double currentSampleRate = 44100.0;
