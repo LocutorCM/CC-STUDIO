@@ -34,8 +34,7 @@ void CCStudioAudioProcessorEditor::GlassLookAndFeel::drawRotarySlider (juce::Gra
 CCStudioAudioProcessorEditor::CCStudioAudioProcessorEditor (CCStudioAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    background = juce::Drawable::createFromImageData (BinaryData::ccstudiobg_svg, BinaryData::ccstudiobg_svgSize) != nullptr
-        ? juce::ImageCache::getFromMemory (BinaryData::ccstudiobg_svg, BinaryData::ccstudiobg_svgSize) : juce::Image();
+    background.reset (juce::Drawable::createFromImageData (BinaryData::ccstudiobg_svg, BinaryData::ccstudiobg_svgSize));
     title.setText ("CC STUDIO", juce::dontSendNotification);
     title.setFont (juce::Font (juce::FontOptions (34.0f, juce::Font::bold)));
     title.setColour (juce::Label::textColourId, juce::Colour (0xff6f1839));
@@ -77,7 +76,7 @@ CCStudioAudioProcessorEditor::CCStudioAudioProcessorEditor (CCStudioAudioProcess
 void CCStudioAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colour (0xffedb8c9));
-    if (background.isValid()) g.drawImageWithin (background, 0, 0, getWidth(), getHeight(), juce::RectanglePlacement::stretchToFit);
+    if (background != nullptr) background->drawWithin (g, getLocalBounds().toFloat(), juce::RectanglePlacement::stretchToFit, 1.0f);
     g.setColour (juce::Colour (0x55fff8fb));
     g.fillRoundedRectangle (juce::Rectangle<float> (24, 20, (float) getWidth() - 48, (float) getHeight() - 40), 24.0f);
     g.setColour (juce::Colour (0x668b3154));
