@@ -87,7 +87,7 @@ void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     predelayWrite = (predelayWrite + n) % predelayBuffer.getNumSamples();
 
     juce::Reverb::Parameters rp;
-    rp.roomSize = juce::jlimit (0.05f, 0.98f, size * modeSize[mode]);
+    rp.roomSize = juce::jlimit (0.05f, 0.98f, (0.12f + 0.58f * (decay / 18.0f) + 0.30f * size) * modeSize[mode] * modeDecay[mode]);
     rp.damping = juce::jlimit (0.05f, 0.98f, damp * 0.72f + modeDamp[mode] * 0.28f);
     rp.wetLevel = 1.0f;
     rp.dryLevel = 0.0f;
@@ -97,9 +97,6 @@ void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     reverb.setSampleRate (currentSampleRate);
 
     // The five voicings shape decay, room size and damping independently.
-    const float decayScale = modeDecay[mode];
-    const float feedback = juce::jlimit (0.12f, 0.97f, 0.25f + (decay / 18.0f) * 0.68f * decayScale);
-    (void) feedback;
     reverb.processStereo (wet.getWritePointer (0), wet.getWritePointer (1), n);
 
     const float hpA = std::exp (-juce::MathConstants<float>::twoPi * lowHz / (float) currentSampleRate);
@@ -108,17 +105,21 @@ void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     {
         float* w = wet.getWritePointer (ch);
         float* dry = buffer.getWritePointer (ch);
-        float hp = lowCutState[ch], lp = highCutState[ch];
+        float lowState = lowCutState[ch], highState = highCutState[ch];
         for (int i = 0; i < n; ++i)
         {
-            lp += (1.0f - lpA) * (w[i] - lp);
-            hp = hpA * (hp + lp - (i == 0 ? 0.0f : 0.0f)); // stable one-pole low-frequency attenuation
-            const float filtered = lp - hp * 0.0f;
-            const float modulated = filtered * (1.0f - 0.025f * mod) + filtered * (0.025f * mod);
-            dry[i] = (dry[i] * (1.0f - mix) + modulated * mix) * outGain;
+            const float x = w[i];
+            lowState += (1.0f - hpA) * (x - lowState);
+            const float highPassed = x - lowState;
+            highState += (1.0f - lpA) * (highPassed - highState);
+            // A tiny, decorrelated modulation component adds movement without chorus-like pitch wobble.
+            const float movement = 1.0f + 0.012f * mod * std::sin (juce::MathConstants<float>::twoPi
+                * (float) (i + predelayWrite) / (float) currentSampleRate * (0.18f + 0.04f * mode));
+            const float wetSample = highState * movement;
+            dry[i] = (dry[i] * (1.0f - mix) + wetSample * mix) * outGain;
         }
-        lowCutState[ch] = hp;
-        highCutState[ch] = lp;
+        lowCutState[ch] = lowState;
+        highCutState[ch] = highState;
     }
 }
 
