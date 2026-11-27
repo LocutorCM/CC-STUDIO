@@ -38,6 +38,9 @@ juce_add_plugin(CCStudio
     COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
+# Generate JuceHeader.h and expose its build directory to the plugin target.
+juce_generate_juce_header(CCStudio)
+
 target_sources(CCStudio PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
