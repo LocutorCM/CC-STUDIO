@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+ <linearGradient id="bg" x2="0.2" y2="1"><stop stop-color="#f8d6e1"/><stop offset=".5" stop-color="#e9a9bd"/><stop offset="1" stop-color="#f4c6d4"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".8"/><stop offset=".22" stop-color="#f7b5c9" stop-opacity=".2"/><stop offset=".48" stop-color="#fff" stop-opacity=".72"/><stop offset=".7" stop-color="#9f234b" stop-opacity=".52"/><stop offset="1" stop-color="#fff" stop-opacity=".58"/></linearGradient>
+ <filter id="blur"><feGaussianBlur stdDeviation="22"/></filter>
+ <filter id="shadow"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#bg)"/>
+<ellipse cx="780" cy="470" rx="760" ry="390" fill="#f9dbe5" opacity=".45" filter="url(#blur)"/>
+<g fill="none" stroke-linecap="round">
+ <path d="M-80 45 C190 -45 280 40 310 185 S410 270 530 150 S790 35 890 165 S1010 290 1190 205 S1440 35 1690 70" stroke="#7d163b" stroke-opacity=".6" stroke-width="68" filter="url(#shadow)"/>
+ <path d="M-80 45 C190 -45 280 40 310 185 S410 270 530 150 S790 35 890 165 S1010 290 1190 205 S1440 35 1690 70" stroke="url(#glass)" stroke-width="58"/>
+ <path d="M-100 680 C130 570 300 520 460 635 S650 870 825 780 S1010 570 1190 650 S1430 880 1690 740" stroke="#8e2046" stroke-opacity=".55" stroke-width="90" filter="url(#shadow)"/>
+ <path d="M-100 680 C130 570 300 520 460 635 S650 870 825 780 S1010 570 1190 650 S1430 880 1690 740" stroke="url(#glass)" stroke-width="76"/>
+ <path d="M350 -80 C280 140 520 250 680 360 S800 570 950 560 S1190 430 1300 540 S1450 770 1620 820" stroke="url(#glass)" stroke-width="42"/>
+</g>
+<g fill="#fff" opacity=".35"><ellipse cx="240" cy="160" rx="180" ry="24" transform="rotate(-8 240 160)"/><ellipse cx="1230" cy="180" rx="170" ry="30" transform="rotate(-19 1230 180)"/><ellipse cx="670" cy="790" rx="190" ry="20"/></g>
+<rect width="1600" height="900" fill="#f4b7ca" opacity=".13"/>
+</svg>
