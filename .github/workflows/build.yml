@@ -1,0 +1,39 @@
+name: Build CC Studio
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DJUCE_BUILD_EXTRAS=OFF -DJUCE_BUILD_EXAMPLES=OFF
+      - name: Build AU, VST3 and Standalone
+        run: cmake --build build --config Release --parallel 3
+      - name: Package plugins
+        run: |
+          mkdir -p artifacts
+          find build -type d \( -name "*.vst3" -o -name "*.component" -o -name "CC Studio.app" \) -exec ditto {} artifacts/{} \; || true
+          cd artifacts && zip -r ../CC-Studio-macOS.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CC-Studio-macOS
+          path: CC-Studio-macOS.zip
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DJUCE_BUILD_EXTRAS=OFF -DJUCE_BUILD_EXAMPLES=OFF
+      - name: Build
+        run: cmake --build build --config Release --parallel 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CC-Studio-Windows-VST3
+          path: build/**/CC Studio.vst3/**
