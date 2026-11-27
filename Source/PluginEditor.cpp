@@ -34,7 +34,7 @@ void CCStudioAudioProcessorEditor::GlassLookAndFeel::drawRotarySlider (juce::Gra
 CCStudioAudioProcessorEditor::CCStudioAudioProcessorEditor (CCStudioAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    background.reset (juce::Drawable::createFromImageData (BinaryData::ccstudiobg_svg, BinaryData::ccstudiobg_svgSize));
+    background = juce::Drawable::createFromImageData (BinaryData::ccstudiobg_svg, BinaryData::ccstudiobg_svgSize);
     title.setText ("CC STUDIO", juce::dontSendNotification);
     title.setFont (juce::Font (juce::FontOptions (34.0f, juce::Font::bold)));
     title.setColour (juce::Label::textColourId, juce::Colour (0xff6f1839));
