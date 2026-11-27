@@ -1,4 +1,4 @@
-name: Build CC Studio
+name: Build CC Studio (macOS Intel)
 on:
   push:
     branches: [ main ]
@@ -7,33 +7,55 @@ on:
   workflow_dispatch:
 
 jobs:
-  macos:
-    runs-on: macos-13
+  macos-intel:
+    name: macOS Intel • Monterey 12+
+    runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v4
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DJUCE_BUILD_EXTRAS=OFF -DJUCE_BUILD_EXAMPLES=OFF
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          brew update
+          brew install cmake ninja
+
+      - name: Configure x86_64 build
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+            -DJUCE_BUILD_EXTRAS=OFF \
+            -DJUCE_BUILD_EXAMPLES=OFF
+
       - name: Build AU, VST3 and Standalone
         run: cmake --build build --config Release --parallel 3
-      - name: Package plugins
+
+      - name: Collect macOS plugins
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p artifacts
-          find build -type d \( -name "*.vst3" -o -name "*.component" -o -name "CC Studio.app" \) -exec ditto {} artifacts/{} \; || true
-          cd artifacts && zip -r ../CC-Studio-macOS.zip .
-      - uses: actions/upload-artifact@v4
+          find build -type d \( -name "*.vst3" -o -name "*.component" -o -name "*.app" \) -prune -print0 |
+          while IFS= read -r -d '' bundle; do
+            name="$(basename "$bundle")"
+            ditto "$bundle" "artifacts/$name"
+          done
+          test -n "$(find artifacts -mindepth 1 -maxdepth 1 -print -quit)"
+          cd artifacts
+          zip -qry ../CC-Studio-macOS-Intel-Monterey.zip .
+
+      - name: Verify Intel architecture and deployment target
+        run: |
+          find artifacts -type f \( -name "CC Studio" -o -name "*.dylib" \) -print0 |
+          while IFS= read -r -d '' binary; do
+            file "$binary"
+            lipo -info "$binary" || true
+          done
+
+      - name: Upload installer packages
+        uses: actions/upload-artifact@v4
         with:
-          name: CC-Studio-macOS
-          path: CC-Studio-macOS.zip
-  windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: microsoft/setup-msbuild@v2
-      - name: Configure
-        run: cmake -S . -B build -A x64 -DJUCE_BUILD_EXTRAS=OFF -DJUCE_BUILD_EXAMPLES=OFF
-      - name: Build
-        run: cmake --build build --config Release --parallel 3
-      - uses: actions/upload-artifact@v4
-        with:
-          name: CC-Studio-Windows-VST3
-          path: build/**/CC Studio.vst3/**
+          name: CC-Studio-macOS-Intel-Monterey
+          path: CC-Studio-macOS-Intel-Monterey.zip
+          if-no-files-found: error
