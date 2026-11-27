@@ -80,7 +80,7 @@ void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         for (int i = 0; i < n; ++i)
         {
             const int read = (predelayWrite + i - delaySamples + predelayBuffer.getNumSamples()) % predelayBuffer.getNumSamples();
-            delayed[i] = predelayBuffer.getReadPointer (ch)[read];
+            delayed[i] = delaySamples == 0 ? in[i] : predelayBuffer.getReadPointer (ch)[read];
             predelayBuffer.setSample (ch, (predelayWrite + i) % predelayBuffer.getNumSamples(), in[i]);
         }
     }
