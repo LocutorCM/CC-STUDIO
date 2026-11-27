@@ -30,6 +30,8 @@ juce_add_plugin(CCStudio
     FORMATS AU VST3 Standalone
     PRODUCT_NAME "CC Studio"
     DESCRIPTION "Creative stereo vocal reverb"
+    AU_MAIN_TYPE kAudioUnitType_Effect
+    VST3_CATEGORIES Fx Reverb
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
