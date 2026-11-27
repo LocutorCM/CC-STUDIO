@@ -41,15 +41,24 @@ void CCStudioAudioProcessor::releaseResources() { reverb.reset(); }
 
 bool CCStudioAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    return layouts.getMainInputChannelSet() == juce::AudioChannelSet::stereo()
-        && layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
+    const auto input = layouts.getMainInputChannelSet();
+    const auto output = layouts.getMainOutputChannelSet();
+
+    // Logic Pro offers different insert menus for mono and stereo tracks.
+    // Advertise both layouts, while keeping input and output channel counts matched.
+    if (input != output)
+        return false;
+
+    return input == juce::AudioChannelSet::mono()
+        || input == juce::AudioChannelSet::stereo();
 }
 
 void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     const int n = buffer.getNumSamples();
-    if (buffer.getNumChannels() < 2) return;
+    const int numChannels = buffer.getNumChannels();
+    if (numChannels < 1 || numChannels > 2) return;
 
     const int mode = (int) parameters.getRawParameterValue ("MODE")->load();
     const float mix = parameters.getRawParameterValue ("MIX")->load() * 0.01f;
@@ -68,12 +77,12 @@ void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     const float modeSize[]  = { 0.76f, 0.62f, 1.0f, 0.55f, 1.0f };
     const float modeWidth[] = { 1.2f, 1.0f, 1.35f, 1.15f, 1.45f };
 
-    juce::AudioBuffer<float> wet (2, n);
+    juce::AudioBuffer<float> wet (numChannels, n);
     wet.clear();
     const int delaySamples = juce::jlimit (0, predelayBuffer.getNumSamples() - 2,
         (int) std::round (preMs * 0.001 * currentSampleRate));
 
-    for (int ch = 0; ch < 2; ++ch)
+    for (int ch = 0; ch < numChannels; ++ch)
     {
         const float* in = buffer.getReadPointer (ch);
         float* delayed = wet.getWritePointer (ch);
@@ -96,11 +105,14 @@ void CCStudioAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     reverb.setParameters (rp);
 
     // The five voicings shape decay, room size and damping independently.
-    reverb.processStereo (wet.getWritePointer (0), wet.getWritePointer (1), n);
+    if (numChannels == 2)
+        reverb.processStereo (wet.getWritePointer (0), wet.getWritePointer (1), n);
+    else
+        reverb.processMono (wet.getWritePointer (0), n);
 
     const float hpA = std::exp (-juce::MathConstants<float>::twoPi * lowHz / (float) currentSampleRate);
     const float lpA = std::exp (-juce::MathConstants<float>::twoPi * highHz / (float) currentSampleRate);
-    for (int ch = 0; ch < 2; ++ch)
+    for (int ch = 0; ch < numChannels; ++ch)
     {
         float* w = wet.getWritePointer (ch);
         float* dry = buffer.getWritePointer (ch);
