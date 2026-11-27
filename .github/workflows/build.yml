@@ -6,30 +6,41 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   macos-intel:
     name: macOS Intel • Monterey 12+
     runs-on: macos-15-intel
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Install build tools
+      - name: Check build tools
         run: |
-          brew update
-          brew install cmake ninja
+          cmake --version
+          ninja --version
+          xcodebuild -version
 
       - name: Configure x86_64 build
+        timeout-minutes: 10
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_OSX_ARCHITECTURES=x86_64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
             -DJUCE_BUILD_EXTRAS=OFF \
-            -DJUCE_BUILD_EXAMPLES=OFF
+            -DJUCE_BUILD_EXAMPLES=OFF \
+            -DCMAKE_VERBOSE_MAKEFILE=ON
 
       - name: Build AU, VST3 and Standalone
-        run: cmake --build build --config Release --parallel 3
+        timeout-minutes: 25
+        run: |
+          cmake --build build --config Release --parallel 2 --verbose
 
       - name: Collect macOS plugins
         shell: bash
@@ -38,24 +49,24 @@ jobs:
           mkdir -p artifacts
           find build -type d \( -name "*.vst3" -o -name "*.component" -o -name "*.app" \) -prune -print0 |
           while IFS= read -r -d '' bundle; do
-            name="$(basename "$bundle")"
-            ditto "$bundle" "artifacts/$name"
+            ditto "$bundle" "artifacts/$(basename "$bundle")"
           done
           test -n "$(find artifacts -mindepth 1 -maxdepth 1 -print -quit)"
           cd artifacts
           zip -qry ../CC-Studio-macOS-Intel-Monterey.zip .
 
-      - name: Verify Intel architecture and deployment target
+      - name: Verify Intel architecture
         run: |
-          find artifacts -type f \( -name "CC Studio" -o -name "*.dylib" \) -print0 |
+          find artifacts -type f -name "CC Studio" -print0 |
           while IFS= read -r -d '' binary; do
             file "$binary"
-            lipo -info "$binary" || true
+            lipo -info "$binary"
           done
 
-      - name: Upload installer packages
+      - name: Upload build
         uses: actions/upload-artifact@v4
         with:
           name: CC-Studio-macOS-Intel-Monterey
           path: CC-Studio-macOS-Intel-Monterey.zip
           if-no-files-found: error
+          retention-days: 14
