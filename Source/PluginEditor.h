@@ -15,7 +15,7 @@ private:
         void drawRotarySlider (juce::Graphics&, int, int, int, int, float, float, float, juce::Slider&) override;
     } look;
     CCStudioAudioProcessor& processor;
-    juce::Image background;
+    std::unique_ptr<juce::Drawable> background;
     juce::ComboBox mode;
     juce::Label title, subtitle;
     juce::Slider mix, decay, predelay, size, width, damping, lowcut, highcut, modulation, output;
