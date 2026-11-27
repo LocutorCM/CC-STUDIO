@@ -5,6 +5,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if(APPLE)
+    # CC Studio targets Intel Macs running macOS Monterey (12.0) or newer.
+    set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build Intel macOS binaries" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum supported macOS version" FORCE)
+endif()
+
 include(FetchContent)
 FetchContent_Declare(JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
